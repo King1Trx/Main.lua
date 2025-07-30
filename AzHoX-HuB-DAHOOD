@@ -1,0 +1,352 @@
+--<< Services >>--
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+--<< Variables >>--
+local Key = "AzHoX-Key-10720179285"
+local AimbotEnabled = false
+local EspEnabled = false
+local AutoShotEnabled = false
+local AutoFarmEnabled = false
+local GuiLocked = false
+
+--<< GUI Creation >>--
+local MainGui = Instance.new("ScreenGui", game.CoreGui)
+MainGui.Name = "AzHoX_GUI"
+
+-- UI Corner Generator
+local function addCorner(obj, rad)
+	local uic = Instance.new("UICorner", obj)
+	uic.CornerRadius = UDim.new(0, rad or 8)
+end
+
+-- UI Stroke Rainbow Effect
+local function makeRainbowStroke(obj)
+	local stroke = Instance.new("UIStroke", obj)
+	stroke.Thickness = 2
+	coroutine.wrap(function()
+		while obj and obj.Parent do
+			for i = 0, 1, 0.05 do
+				local color = Color3.fromHSV(i, 1, 1)
+				stroke.Color = color
+				wait(0.05)
+			end
+		end
+	end)()
+end
+
+-- Draggable Function
+local function makeDraggable(frame)
+	local dragToggle = false
+	local dragInput, dragStart, startPos
+
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 and not GuiLocked then
+			dragToggle = true
+			dragStart = input.Position
+			startPos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragToggle = false
+				end
+			end)
+		end
+	end)
+
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+
+	RunService.Heartbeat:Connect(function()
+		if dragToggle and dragInput then
+			local delta = dragInput.Position - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+-- Notification
+local function notify(text)
+	game.StarterGui:SetCore("SendNotification", {
+		Title = "System AzHoX",
+		Text = text,
+		Duration = 4
+	})
+end
+
+--<< GUI 1: Key System >>--
+local keyFrame = Instance.new("Frame", MainGui)
+keyFrame.Size = UDim2.new(0, 320, 0, 160)
+keyFrame.Position = UDim2.new(0.5, -160, 0.5, -80)
+keyFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+keyFrame.Name = "KeyFrame"
+addCorner(keyFrame)
+makeDraggable(keyFrame)
+makeRainbowStroke(keyFrame)
+
+local title = Instance.new("TextLabel", keyFrame)
+title.Size = UDim2.new(1, 0, 0, 28)
+title.BackgroundTransparency = 1
+title.Text = "AzHoX Key System"
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+
+local textbox = Instance.new("TextBox", keyFrame)
+textbox.Size = UDim2.new(0.85, 0, 0, 30)
+textbox.Position = UDim2.new(0.075, 0, 0.4, 0)
+textbox.PlaceholderText = "Enter Key Here 🔐"
+textbox.Text = ""
+textbox.TextScaled = true
+textbox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+addCorner(textbox)
+
+local enter = Instance.new("TextButton", keyFrame)
+enter.Size = UDim2.new(0.35, 0, 0, 28)
+enter.Position = UDim2.new(0.6, 0, 0.75, 0)
+enter.Text = "Enter Key"
+enter.TextScaled = true
+enter.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+addCorner(enter)
+
+local getlink = Instance.new("TextButton", keyFrame)
+getlink.Size = UDim2.new(0.35, 0, 0, 28)
+getlink.Position = UDim2.new(0.05, 0, 0.75, 0)
+getlink.Text = "Get Link"
+getlink.TextScaled = true
+getlink.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+addCorner(getlink)
+
+getlink.MouseButton1Click:Connect(function()
+	setclipboard("https://azhox-key-system.netlify.app/")
+	notify("Key Link copied to clipboard!")
+end)
+
+enter.MouseButton1Click:Connect(function()
+	if textbox.Text == Key then
+		keyFrame:Destroy()
+		loadDeviceGUI()
+	else
+		notify("Wrong Key!")
+	end
+end)
+
+--<< GUI 2: Device Selection >>--
+function loadDeviceGUI()
+	local deviceFrame = Instance.new("Frame", MainGui)
+	deviceFrame.Size = UDim2.new(0, 380, 0, 180)
+	deviceFrame.Position = UDim2.new(0.5, -190, 0.5, -90)
+	deviceFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	deviceFrame.Name = "DeviceFrame"
+	addCorner(deviceFrame)
+	makeDraggable(deviceFrame)
+	makeRainbowStroke(deviceFrame)
+
+	local title = Instance.new("TextLabel", deviceFrame)
+	title.Size = UDim2.new(1, 0, 0, 28)
+	title.BackgroundTransparency = 1
+	title.Text = "ماهو جهازك | What is your device"
+	title.Font = Enum.Font.GothamBold
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.TextScaled = true
+
+	local icons = {
+		{ name = "Mobile", id = "rbxassetid://14040313879" },
+		{ name = "PC", id = "rbxassetid://12684119225" },
+		{ name = "Tablet", id = "rbxassetid://134616667923000" }
+	}
+
+	for i, icon in pairs(icons) do
+		local btn = Instance.new("ImageButton", deviceFrame)
+		btn.Name = icon.name
+		btn.Image = icon.id
+		btn.Size = UDim2.new(0, 100, 0, 100)
+		btn.Position = UDim2.new((i - 1) * 0.33, 10, |oai:code-citation|
+
+function loadMainGUI()
+	local buttonsFrame = Instance.new("Frame", MainGui)
+	buttonsFrame.Size = UDim2.new(0, 240, 0, 180)
+	buttonsFrame.Position = UDim2.new(0.03, 0, 0.4, 0)
+	buttonsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	addCorner(buttonsFrame)
+	makeRainbowStroke(buttonsFrame)
+	makeDraggable(buttonsFrame)
+
+	local lockButton = Instance.new("TextButton", buttonsFrame)
+	lockButton.Size = UDim2.new(1, 0, 0, 22)
+	lockButton.Position = UDim2.new(0, 0, 0, 0)
+	lockButton.Text = "Lock"
+	lockButton.TextScaled = true
+	lockButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	addCorner(lockButton)
+
+	lockButton.MouseButton1Click:Connect(function()
+		GuiLocked = not GuiLocked
+		lockButton.Text = GuiLocked and "UnLock" or "Lock"
+	end)
+
+	--[[ FUNCTION CREATOR ]]--
+	local function createToggleBtn(text, pos, callback)
+		local btn = Instance.new("TextButton", buttonsFrame)
+		btn.Size = UDim2.new(1, -20, 0, 30)
+		btn.Position = UDim2.new(0, 10, 0, pos)
+		btn.Text = text
+		btn.TextScaled = true
+		btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		addCorner(btn)
+		makeRainbowStroke(btn)
+
+		btn.MouseButton1Click:Connect(function()
+			callback(btn)
+		end)
+	end
+
+	-- Aimbot [ON/OFF]
+	createToggleBtn("Aimbot", 30, function(btn)
+		AimbotEnabled = not AimbotEnabled
+		btn.Text = "Aimbot [ " .. (AimbotEnabled and "ON" or "OFF") .. " ]"
+	end)
+
+	-- ESP [ON/OFF]
+	createToggleBtn("ESP", 70, function(btn)
+		EspEnabled = not EspEnabled
+		btn.Text = "ESP [ " .. (EspEnabled and "ON" or "OFF") .. " ]"
+	end)
+
+	-- AutoShot
+	createToggleBtn("AutoShot", 110, function(btn)
+		AutoShotEnabled = not AutoShotEnabled
+		btn.Text = "AutoShot [ " .. (AutoShotEnabled and "ON" or "OFF") .. " ]"
+	end)
+
+	-- AutoFarm
+	createToggleBtn("AutoFarm", 150, function(btn)
+		AutoFarmEnabled = not AutoFarmEnabled
+		btn.Text = "AutoFarm [ " .. (AutoFarmEnabled and "ON" or "OFF") .. " ]"
+
+		if AutoFarmEnabled then
+			loadstring(game:HttpGet("https://pastebin.com/raw/nsL2CZX2"))()
+		else
+			-- رجوع للمكان السابق (بسيط)
+			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+				LocalPlayer.Character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position + Vector3.new(0, 5, 0))
+			end
+		end
+	end)
+end
+
+-- AIMBOT دائرة + تتبع على الرأس
+local aimbotCircle = Drawing.new("Circle")
+aimbotCircle.Visible = false
+aimbotCircle.Thickness = 1
+aimbotCircle.NumSides = 100
+aimbotCircle.Radius = 80
+aimbotCircle.Filled = false
+
+-- ريمبو لون
+task.spawn(function()
+	while true do
+		local color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+		aimbotCircle.Color = color
+		task.wait(0.5)
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	local cam = workspace.CurrentCamera
+	local closest, closestDist = nil, math.huge
+
+	if AimbotEnabled then
+		aimbotCircle.Position = UIS:GetMouseLocation()
+		aimbotCircle.Visible = true
+
+		for _, player in pairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+				local head = player.Character.Head
+				local screenPos, onScreen = cam:WorldToViewportPoint(head.Position)
+
+				if onScreen and (Vector2.new(screenPos.X, screenPos.Y) - UIS:GetMouseLocation()).Magnitude <= aimbotCircle.Radius then
+					local dist = (head.Position - cam.CFrame.Position).Magnitude
+					if dist < closestDist then
+						closest = head
+						closestDist = dist
+					end
+				end
+			end
+		end
+
+		if closest then
+			cam.CFrame = CFrame.new(cam.CFrame.Position, closest.Position)
+			if AutoShotEnabled and LocalPlayer.Character:FindFirstChildOfClass("Tool") then
+				mouse1click()
+			end
+		end
+	else
+		aimbotCircle.Visible = false
+	end
+end)
+
+-- ESP ريمبو مع اسم + خط
+function createESP(player)
+	local char = player.Character
+	if not char then return end
+
+	local highlight = Instance.new("Highlight", char)
+	highlight.FillTransparency = 1
+	highlight.OutlineTransparency = 0
+	highlight.Name = "AzHoX_ESP"
+
+	local bb = Instance.new("BillboardGui", char)
+	bb.Name = "AzHoX_Name"
+	bb.Size = UDim2.new(0, 100, 0, 20)
+	bb.Adornee = char:WaitForChild("Head")
+	bb.AlwaysOnTop = true
+
+	local nameLabel = Instance.new("TextLabel", bb)
+	nameLabel.Size = UDim2.new(1, 0, 1, 0)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = player.DisplayName
+	nameLabel.TextScaled = true
+	nameLabel.Font = Enum.Font.GothamBold
+
+	task.spawn(function()
+		while player and EspEnabled and char and char:FindFirstChild("AzHoX_ESP") do
+			local color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+			highlight.OutlineColor = color
+			nameLabel.TextColor3 = color
+			wait(0.5)
+		end
+	end)
+end
+
+Players.PlayerAdded:Connect(function(plr)
+	plr.CharacterAdded:Connect(function()
+		task.wait(1)
+		if EspEnabled then
+			createESP(plr)
+		end
+	end)
+end)
+
+RunService.Heartbeat:Connect(function()
+	if EspEnabled then
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer and plr.Character and not plr.Character:FindFirstChild("AzHoX_ESP") then
+				createESP(plr)
+			end
+		end
+	else
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr.Character and plr.Character:FindFirstChild("AzHoX_ESP") then
+				plr.Character.AzHoX_ESP:Destroy()
+			end
+			if plr.Character and plr.Character:FindFirstChild("AzHoX_Name") then
+				plr.Character.AzHoX_Name:Destroy()
+			end
+		end
+	end
+end)
