@@ -1,0 +1,304 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local UserInputService = game:GetService("UserInputService")
+local TextChatService = game:GetService("TextChatService")
+
+-- ====== ScreenGui ======
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "S2S_TopGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- ====== MainFrame ======
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Parent = screenGui
+mainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+mainFrame.Position = UDim2.new(0.5,0,0.5,0)
+mainFrame.Size = UDim2.new(0,460,0,400)
+mainFrame.BackgroundColor3 = Color3.fromRGB(220,20,20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 4
+stroke.Color = Color3.fromRGB(0,0,0)
+stroke.LineJoinMode = Enum.LineJoinMode.Round
+stroke.Parent = mainFrame
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0,10)
+corner.Parent = mainFrame
+
+-- ====== Title ======
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Parent = mainFrame
+title.AnchorPoint = Vector2.new(0.5,0)
+title.Position = UDim2.new(0.5,0,0,8)
+title.Size = UDim2.new(0.9,0,0,32)
+title.BackgroundTransparency = 1
+title.Text = "S2S ON TOP"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 28
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.TextYAlignment = Enum.TextYAlignment.Center
+
+-- ====== Tab Buttons ======
+local tabs = {"استهداف","التخريب","الشات","المطورين"}
+local tabButtons = {}
+local tabFrame = Instance.new("Frame")
+tabFrame.Name = "TabFrame"
+tabFrame.Parent = mainFrame
+tabFrame.AnchorPoint = Vector2.new(0.5,0)
+tabFrame.Position = UDim2.new(0.5,0,0,50)
+tabFrame.Size = UDim2.new(0.95,0,0,50)
+tabFrame.BackgroundTransparency = 1
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.FillDirection = Enum.FillDirection.Horizontal
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0,10)
+listLayout.Parent = tabFrame
+
+for i, tabName in ipairs(tabs) do
+    local btn = Instance.new("TextButton")
+    btn.Name = tabName
+    btn.Parent = tabFrame
+    btn.Size = UDim2.new(0,100,0,50)
+    btn.BackgroundColor3 = Color3.fromRGB(180,0,0)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 20
+    btn.Text = tabName
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0,8)
+    btnCorner.Parent = btn
+    tabButtons[tabName] = btn
+end
+
+-- ====== Pages ======
+local pages = {}
+for _,name in ipairs(tabs) do
+    local frame = Instance.new("ScrollingFrame")
+    frame.Name = name.."Page"
+    frame.Parent = mainFrame
+    frame.AnchorPoint = Vector2.new(0.5,0)
+    frame.Position = UDim2.new(0.5,0,0,110)
+    frame.Size = UDim2.new(0.95,0,0,280)
+    frame.BackgroundTransparency = 1
+    frame.ScrollBarThickness = 6
+    frame.CanvasSize = UDim2.new(0,0,2,0)
+    frame.Visible = false
+    pages[name] = frame
+end
+pages["استهداف"].Visible = true
+
+-- ====== Tab Switching ======
+for tabName,btn in pairs(tabButtons) do
+    btn.MouseButton1Click:Connect(function()
+        for _,frame in pairs(pages) do frame.Visible = false end
+        pages[tabName].Visible = true
+    end)
+end
+
+-- ====== Draggable MainFrame ======
+local dragging = false
+local dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then update(input) end
+end)
+
+-- ====== دالة إنشاء أزرار 2x2 مركزية مع تبديل الحالة ======
+local function createGridButtons(parent, buttons)
+    local startX = -105
+    local startY = 80
+    local spacingX = 210
+    local spacingY = 70
+
+    for i,btnData in ipairs(buttons) do
+        local col = (i-1)%2
+        local row = math.floor((i-1)/2)
+        local posX = startX + col*spacingX
+        local posY = startY + row*spacingY
+
+        local text = btnData[1]
+        local code = btnData[2]
+        local toggle = btnData[3]
+
+        local btn = Instance.new("TextButton")
+        btn.Parent = parent
+        btn.Size = UDim2.new(0,200,0,50)
+        btn.Position = UDim2.new(0.5,posX,0,posY)
+        btn.AnchorPoint = Vector2.new(0.5,0)
+        btn.Text = text
+        btn.BackgroundColor3 = Color3.fromRGB(220,0,0)
+        btn.TextColor3 = Color3.fromRGB(255,255,255)
+        btn.Font = Enum.Font.SourceSansBold
+        btn.TextSize = 18
+        btn.AutoButtonColor = true
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = 3
+        stroke.Color = Color3.fromRGB(0,0,0)
+        stroke.Parent = btn
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0,5)
+        corner.Parent = btn
+
+        if toggle then
+            btn.MouseButton1Click:Connect(function()
+                if btn.Text:find("مُتوقف") then
+                    btn.Text = btn.Text:gsub("مُتوقف","مُفعل")
+                else
+                    btn.Text = btn.Text:gsub("مُفعل","مُتوقف")
+                end
+                local codePlaceholder = code
+            end)
+        else
+            btn.MouseButton1Click:Connect(function()
+                local codePlaceholder = code
+            end)
+        end
+    end
+end
+
+-- ====== صفحة الاستهداف ======
+do
+    local page = pages["استهداف"]
+    local avatarFrame = Instance.new("Frame")
+    avatarFrame.Parent = page
+    avatarFrame.Size = UDim2.new(0,80,0,80)
+    avatarFrame.Position = UDim2.new(0.5,-200,0,10)
+    avatarFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    local avatarCorner = Instance.new("UICorner")
+    avatarCorner.CornerRadius = UDim.new(1,0)
+    avatarCorner.Parent = avatarFrame
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = avatarFrame
+    nameLabel.Size = UDim2.new(1,0,0,20)
+    nameLabel.Position = UDim2.new(0,0,1,0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    nameLabel.Font = Enum.Font.SourceSansBold
+    nameLabel.TextSize = 14
+
+    local inputBox = Instance.new("TextBox")
+    inputBox.Parent = page
+    inputBox.Size = UDim2.new(0,250,0,35)
+    inputBox.Position = UDim2.new(0.5,-125,0,30)
+    inputBox.PlaceholderText = "ادخل يوزر او لقب"
+    inputBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    inputBox.TextColor3 = Color3.fromRGB(255,255,255)
+
+    createGridButtons(page,{
+        {"مشاهده [مُتوقف]",11111,true},
+        {"فلينق [مُتوقف]",22222,true},
+        {"نيك [مُتوقف]",100279,true},
+        {"يمص [مُتوقف]",172186,true},
+        {"انتقال",33333,false},
+        {"تكلبشه",9171892,false},
+        {"نسخ [مُتوقف]",44444,true},
+        {"نسخ [مُتوقف] 2",55555,true}
+    })
+end
+
+-- ====== صفحة التخريب ======
+do
+    local page = pages["التخريب"]
+    createGridButtons(page,{
+        {"تكبير القريبين [مُتوقف]",10101,true},
+        {"كلبشة القريبين [مُتوقف]",91719,true},
+        {"ترقيص القريبين [مُتوقف]",10202,true},
+        {"تغير لقب القريبين [مُتوقف]",10303,true},
+        {"تغير سكن القريبين [مُتوقف]",10404,true},
+        {"تجليس القريبين [مُتوقف]",10505,true}
+    })
+end
+
+-- ====== صفحة الشات ======
+do
+    local page = pages["الشات"]
+    local chatBox = Instance.new("TextBox")
+    chatBox.Parent = page
+    chatBox.Size = UDim2.new(0,300,0,35)
+    chatBox.Position = UDim2.new(0.5,-150,0,20)
+    chatBox.PlaceholderText = "S2S ON TOP"
+    chatBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    chatBox.TextColor3 = Color3.fromRGB(255,255,255)
+
+    createGridButtons(page,{
+        {"سبام [مُتوقف]",20001,true},
+        {"تخويف الشات [مُتوقف]",20002,true}
+    })
+end
+
+-- ====== صفحة المطورين ======
+do
+    local page = pages["المطورين"]
+    local devs = {
+        {name="1il5i", role="Owner", desc="مطور Ui + Gui", img="https://tr.rbxcdn.com/30DAY-AvatarHeadshot-24BD45CDB3F24A0AF3AEC966ADCA2B4A-Png/150/150/AvatarHeadshot/Webp/noFilter"},
+        {name="Rx22177", role="Owner 2", desc="المسؤول عن الافكار والنشر وتعديل", img="https://tr.rbxcdn.com/30DAY-AvatarHeadshot-A9C748FCB0C8215B83FE3EC7D4DADAEF-Png/150/150/AvatarHeadshot/Webp/noFilter"},
+    }
+
+    for i,dev in ipairs(devs) do
+        local frame = Instance.new("Frame")
+        frame.Parent = page
+        frame.Size = UDim2.new(0,180,0,130)
+        frame.Position = UDim2.new(0.5, ((i-1)%2==0 and -100 or 10),0, 20 + math.floor((i-1)/2)*150)
+        frame.AnchorPoint = Vector2.new(0.5,0)
+        frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+
+        local avatar = Instance.new("ImageLabel")
+        avatar.Parent = frame
+        avatar.Size = UDim2.new(0,80,0,80)
+        avatar.Position = UDim2.new(0.5,-40,0,10)
+        avatar.Image = dev.img
+        local avatarCorner = Instance.new("UICorner")
+        avatarCorner.CornerRadius = UDim.new(1,0)
+        avatarCorner.Parent = avatar
+
+        local label = Instance.new("TextLabel")
+        label.Parent = frame
+        label.Size = UDim2.new(1,0,0,40)
+        label.Position = UDim2.new(0,0,0,95)
+        label.BackgroundTransparency = 1
+        label.Text = dev.name.." / "..dev.role.."\n"..dev.desc
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.TextScaled = true
+        label.Font = Enum.Font.SourceSansBold
+        label.TextYAlignment = Enum.TextYAlignment.Top
+        label.TextXAlignment = Enum.TextXAlignment.Center
+    end
+end
