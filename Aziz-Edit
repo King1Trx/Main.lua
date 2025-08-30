@@ -30,14 +30,14 @@ Name = <string> - The name of the tab.
 Icon = <string> - The icon of the tab.
 PremiumOnly = <bool> - Makes the tab accessible to Sirus Premium users only.
 ]]local Section = Tab:AddSection({
-	Name = "الرئــيـســيـه"
+	Name = "الرئيسيه"
 })
  
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
  
 Tab:AddButton({
-    Name = "هلا " .. player.Name,
+    Name = " هلا " .. player.Name,
     Callback = function()
         print("button pressed by " .. player.Name)
     end
